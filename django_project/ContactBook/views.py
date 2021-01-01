@@ -31,8 +31,12 @@ def Contacts(request):
 		info.last_name = request.POST['last_name']
 		info.email = request.POST['email']
 		info.contact_number = request.POST['contact_number']
-
-		info.save()
+		form = InfromationForm(request.POST,instance= info)
+		if form.is_valid():
+			info.save()
+		else:
+			messages.error(request, f'Invalid Field or Email already exists!')
+			return redirect('contacts_list')			
 		contacts_list = Information.objects.all().values()
 		return render(request,'ContactBook/contacts.html',{'contacts':contacts_list, 'full_results' : contacts_list})
 		# return JsonResponse({'message' : "Added successfully."})
