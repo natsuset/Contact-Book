@@ -38,7 +38,7 @@
     </div>
   </div>
 
-    <li class="d-flex justify-content-sm-end">
+    <li class="d-flex justify-content-lg-end">
         <nav class="navbar navbar-dark bg-dark">
         <button id="addContact" class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarToggleExternalContent" aria-controls="navbarToggleExternalContent" aria-expanded="false" aria-label="Toggle navigation">
           Add Contact
@@ -52,43 +52,46 @@
 
 
 {% block content %}
-    <div class="section">
 
-        <div class="rightsection">
-                <table>
-                    <tr>
-                        <th>Name</th>
-                        <th style="padding-left: 200px;">Email</th>
-                        <th style="padding-left: 101px;">Contact Number</th>
-                    </tr>
-                {% paginate contacts %}
-                {% for contact in contacts %}
-                <tr  id="uniqueid">
-                        <td><p> {{contact.first_name}} {{contact.last_name}}</p> </td>
-                        <td style="padding-left: 200px;">{{contact.email}}</td>
-                        <td style="padding-left: 101px;">{{contact.contact_number}}
-                            <button  title="more" class="btn btn-secondary " type="button" id="dropdownMenuButton"  data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
-                            <i class='fa fa-ellipsis-v'></i>
-                            </button> 
-                            <div class="dropdown-menu" aria-labelledby="dropdownMenuButton" >
-                           
-                              <form action="delete_contact/{{ contact.id }}/"  method="POST">
-                                {% csrf_token %}
-                                    <button  type="submit"  class="btn btn-danger float-left "><i class="fa fa-trash" aria-hidden="true"></i>
-                                    </button>
-                              </form>
-                              <form action="edit_contact/{{ contact.id }}/"  method="GET">
-                                {% csrf_token %}
-                                <button type="submit"  class="btn btn-secondary float-left "><i class="fa fa-pencil" aria-hidden="true"></i></button>
-                               </form>
-                            </div>
-                        </td>
-                    </tr>
-                {% endfor %}
-                {% show_pages %}
-                </table>
-            
-        </div>
-    </div>
+    <table class="table table-striped">
+      <thead class="table-dark">
+        <tr>
+            <th>First Name</th>
+            <th>Last Name</th>
+            <th>Email</th>
+            <th>Contact Number</th>
+        </tr>
+      </thead>
+      <tbody>
+
+        {% paginate contacts %}
+        {% for contact in contacts %}
+        <tr  id="uniqueid">
+                <td>{{contact.first_name}}</td>
+                <td>{{contact.last_name}}</td>
+                <td>{{contact.email}}</td>
+                <td>{{contact.contact_number}}
+                    <button  title="more" class="btn btn-secondary " type="button" id="dropdownMenuButton"  data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
+                    <i class='fa fa-ellipsis-v'></i>
+                    </button> 
+                    <div class="dropdown-menu" aria-labelledby="dropdownMenuButton" >
+                   
+                      <form action="delete_contact/{{ contact.id }}/"  method="POST">
+                        {% csrf_token %}
+                            <button  type="submit"  class="btn btn-danger float-left "><i class="fa fa-trash" aria-hidden="true"></i>
+                            </button>
+                      </form>
+                      <form action="edit_contact/{{ contact.id }}/"  method="GET">
+                        {% csrf_token %}
+                        <button type="submit"  class="btn btn-secondary float-left "><i class="fa fa-pencil" aria-hidden="true"></i></button>
+                       </form>
+                    </div>
+                </td>
+            </tr>
+        {% endfor %}
+        {% show_pages %}
+
+      </tbody>
+    </table>
 
 {% endblock content %}

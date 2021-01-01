@@ -1,5 +1,6 @@
 from django.shortcuts import render,redirect
 from .models import Information
+from django.contrib import messages
 from django.http import HttpResponseRedirect, JsonResponse
 from .forms import InfromationForm
 from django.db.models import Value as V
@@ -47,33 +48,37 @@ def Contacts(request):
 		# return JsonResponse({'results' : pagination(page_no, users) })
 	else:
 		return redirect('contacts_list')
-		# return render(request,'ContactBook/users_list.html', {'results' : [], "message" : "Use only GET or POST methods"})
 		# return JsonResponse({"message" : "Use only GET or POST methods"})
 
 	# return JsonResponse({'results' : list(users)[10 * (page_no - 1):last]})
-		# return render(request,'ContactBook/users_list.html', {'results' : users})
-
-	# return render(request,'ContactBook/contacts.html',{'contacts':contacts})
 
 @csrf_exempt
 def delete_contact(request,contact_id):
 
 	if request.method == "GET":
-		return JsonResponse({'message' : "USE METHOD : POST" })
+		messages.error(request, f'Invalid Request!')
+		return redirect('contacts_list')
+		# return JsonResponse({'message' : "USE METHOD : POST" })
 	elif request.method == "POST":
 		try:
 			Information.objects.get(id=contact_id).delete()
 
 			contacts_list = Information.objects.all().values()
-			return JsonResponse({'message' : "successfully deleted the contact", 'contacts' : list(contacts_list)})
+			messages.success(request, f'The contact has been successfully deleted!')
+			return redirect('contacts_list')
+			# return JsonResponse({'message' : "successfully deleted the contact", 'contacts' : list(contacts_list)})
 		except:
-			return JsonResponse({'message' : "Contact doesn't exist" })
+			messages.error(request, f'Contact doesn\'t exist')
+			return redirect('contacts_list')
+			# return JsonResponse({'message' : "Contact doesn't exist" })
 	else:
-		return JsonResponse({"message" : "Use only POST method for DELETE"}) 
+		messages.error(request, 'Invalid Request Method!')
+		return HttpResponseRedirect("/")
+		# return JsonResponse({"message" : "Use only POST method for DELETE"}) 
 
 	# return HttpResponseRedirect("/")
 
-@csrf_exempt
+# @csrf_exempt
 def edit_contact(request,contact_id):
 	if request.method == "GET":
 		Info_instance = Information.objects.get(id=contact_id)
@@ -88,13 +93,19 @@ def edit_contact(request,contact_id):
 		if form.is_valid():
 			form.save()
 			contacts_list = Information.objects.filter(id=contact_id).values()
-			return JsonResponse({'message' : "successfully Updated", 'contacts' : list(contacts_list)})
+			messages.success(request, f'successfully Updated!')
+			return redirect('contacts_list')
+			# return JsonResponse({'message' : "successfully Updated", 'contacts' : list(contacts_list)})
 
 		else:
-			return JsonResponse({'message' : "Email already exists"})
+			messages.error(request, 'Email already exists!')
+			return redirect('contacts_list')
+			# return JsonResponse({'message' : "Email already exists"})
 
 	else:
-		return JsonResponse({"message" : "Use only GET or POST methods"}) 
+		messages.success(request, 'Use only GET or POST methods!')
+		return redirect('contacts_list')
+		# return JsonResponse({"message" : "Use only GET or POST methods"}) 
 
 	# return render(request, "ContactBook/editcontect.html")
 

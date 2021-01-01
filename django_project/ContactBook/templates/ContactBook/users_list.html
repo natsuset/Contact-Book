@@ -2,40 +2,49 @@
 {% load el_pagination_tags %}
 
 {% block content %}
-        <div class="rightsection">
-                <table>
-                <!-- / search contact start here -->
-                {% if results%}
-                {% paginate results %}
-                 {% for i in results%}
-                <tr  id="uniqueid">    
-                        
-                        <td  ><p> {{i.first_name }} {{ i.last_name}}</p> </td>
-                        <td  style="padding-left: 200px;">{{i.email}}</td>
-                        <td  style="padding-left: 101px;">{{i.contact_number}}
-                            <button  title="more" class="btn btn-secondary " type="button" id="dropdownMenuButton"  data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
-                                  <i class='fa fa-ellipsis-v'></i>
-                                </button> 
-                                <div class="dropdown-menu" aria-labelledby="dropdownMenuButton" >
-                               
-                                  <form action="delete_contact/{{ contact.id }}/"  method="POST">
-                                        {% csrf_token %}
-                                        <button  type="submit"  class="btn btn-danger float-left "><i class="fa fa-trash" aria-hidden="true"></i>
-                                        </button>
-                                        <!-- <button type="submit"  class="btn btn-danger float-right ">EDIT</button> -->
-                                  </form>
-                                  <form action="edit_contact/{{ contact.id }}/"  method="GET">
-                                    {% csrf_token %}
-                                    <button type="submit"  class="btn btn-secondary float-left "><i class="fa fa-pencil" aria-hidden="true"></i></button>
-                                    <!-- <button type="submit"  class="btn btn-danger float-right ">EDIT</button> -->
-                              </form>
-                                </div>
-                        </td>
-                    </tr>
-                    {%endfor%}
-                    {% show_pages %}
-                    {% endif %}  
-               
-                </table>
-        </div>
+
+    <table class="table table-striped">
+      <thead class="table-dark">
+        <tr>
+            <th>First Name</th>
+            <th>Last Name</th>
+            <th>Email</th>
+            <th>Contact Number</th>
+        </tr>
+      </thead>
+      <tbody>
+
+        {% if results%}
+        {% paginate results %}
+        {% for contact in results%}
+
+        <tr  id="uniqueid">
+                <td>{{contact.first_name}}</td>
+                <td>{{contact.last_name}}</td>
+                <td>{{contact.email}}</td>
+                <td>{{contact.contact_number}}
+                    <button  title="more" class="btn btn-secondary " type="button" id="dropdownMenuButton"  data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
+                    <i class='fa fa-ellipsis-v'></i>
+                    </button> 
+                    <div class="dropdown-menu" aria-labelledby="dropdownMenuButton" >
+                   
+                      <form action="delete_contact/{{ contact.id }}/"  method="POST">
+                        {% csrf_token %}
+                            <button  type="submit"  class="btn btn-danger float-left "><i class="fa fa-trash" aria-hidden="true"></i>
+                            </button>
+                      </form>
+                      <form action="edit_contact/{{ contact.id }}/"  method="GET">
+                        {% csrf_token %}
+                        <button type="submit"  class="btn btn-secondary float-left "><i class="fa fa-pencil" aria-hidden="true"></i></button>
+                       </form>
+                    </div>
+                </td>
+            </tr>
+        {% endfor %}
+        {% show_pages %}
+        {% endif %}
+
+      </tbody>
+    </table>
+
  {% endblock content %}

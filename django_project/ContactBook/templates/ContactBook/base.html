@@ -16,13 +16,14 @@
     <body>
         <header class="site-header">
           <nav class="navbar navbar-dark bg-dark justify-content-between">
-            <a class="navbar-brand">Navbar</a>
-            {% block navbar %}{% endblock navbar %}
+            <a class="navbar-brand" href="/">Contact Book</a>
+            
             <form class="form-inline" form action="/search" method="GET">
               <input class="form-control mr-sm-2" type="search" aria-describedby="emailHelp" placeholder="Search" name="search_query" id="search_query">
 
               <button class="btn btn-outline-success my-2 my-sm-0" type="submit"> Search</button>
             </form>
+            {% block navbar %}{% endblock navbar %}
           </nav>
 
         </header>
