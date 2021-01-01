@@ -15,7 +15,7 @@ def pagination(page_no, contacts_list):
 	last = len(contacts_list)
 	if len(contacts_list) > default_count * (int(page_no) - 1):	
 		if default_count * (page_no) < last:
-			last = 10 * (page_no)
+			last = default_count * (page_no)
 	return contacts_list[default_count * (page_no - 1):last]
 
 
@@ -133,7 +133,7 @@ def  SearchContact(request):
 		users = list(Information.objects.filter(email__icontains=query).values())
 		users = Union(users, list(Information.objects.annotate(
 			full_name=Concat('first_name', V(' '), 'last_name')).filter(full_name__icontains=query).values()))
-		print(len(users))
+
 	elif "query_email" in request.GET:
 
 		query = request.GET['query_email']
@@ -161,6 +161,6 @@ def  SearchContact(request):
 	# 	return render(request,'ContactBook/users_list.html', {'results' : users, 'messages' : ["Page Not Found"], 'full_results' : page_contacts})
 		# return JsonResponse({'message' : "Page Not Found"})
 
-	print(len(users))
+
 	return render(request,'ContactBook/users_list.html', {'results' : users, 'messages' : ["Search Results for " + query]})
 	# return JsonResponse({'results' : page_contacts})
