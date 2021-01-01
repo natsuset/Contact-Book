@@ -6,7 +6,7 @@ from .forms import InfromationForm
 from django.db.models import Value as V
 from django.db.models.functions import Concat   
 from django.views.decorators.csrf import csrf_exempt
-
+from collections import defaultdict
 # Create your views here.
 
 def pagination(page_no, contacts_list):
@@ -43,7 +43,7 @@ def Contacts(request):
 
 	elif request.method == "GET":
 		users = list(Information.objects.all().values())
-		print(users)
+		# print(users)
 		page_no = 1
 		if "page" in request.GET:
 			page_no = int(request.GET['page'])
@@ -113,6 +113,16 @@ def edit_contact(request,contact_id):
 
 	# return render(request, "ContactBook/editcontect.html")
 
+def Union(lst1, lst2):
+	final_list = lst1
+	for lst2_item in lst2:
+		for each in final_list:
+			if lst2_item['id'] == each['id']:
+				break
+		else:
+			final_list.append(lst2_item)
+
+	return final_list
 
 def  SearchContact(request):
 
@@ -121,9 +131,9 @@ def  SearchContact(request):
 	if "search_query" in request.GET:
 		query = request.GET['search_query']
 		users = list(Information.objects.filter(email__icontains=query).values())
-		users = users + list(Information.objects.annotate(
-			full_name=Concat('first_name', V(' '), 'last_name')).filter(full_name__icontains=query).values())
-
+		users = Union(users, list(Information.objects.annotate(
+			full_name=Concat('first_name', V(' '), 'last_name')).filter(full_name__icontains=query).values()))
+		print(len(users))
 	elif "query_email" in request.GET:
 
 		query = request.GET['query_email']
@@ -143,11 +153,14 @@ def  SearchContact(request):
 	if "page" in request.GET:
 		page_no = int(request.GET['page'])
 	
-	page_contacts = pagination(page_no, users)
+	# page_contacts = pagination(page_no, users)
 
-	if page_contacts == []:
-		return render(request,'ContactBook/users_list.html', {'results' : page_contacts, 'messages' : ["Page Not Found"], 'full_results' : users})
+	# print(len(page_contacts))
+
+	# if page_contacts == []:
+	# 	return render(request,'ContactBook/users_list.html', {'results' : users, 'messages' : ["Page Not Found"], 'full_results' : page_contacts})
 		# return JsonResponse({'message' : "Page Not Found"})
 
-	return render(request,'ContactBook/users_list.html', {'results' : page_contacts, 'messages' : ["Search Results for " + query], 'full_results' : users})
+	print(len(users))
+	return render(request,'ContactBook/users_list.html', {'results' : users, 'messages' : ["Search Results for " + query]})
 	# return JsonResponse({'results' : page_contacts})
