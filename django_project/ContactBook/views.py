@@ -1,3 +1,4 @@
+from rest_framework.decorators import api_view
 from django.shortcuts import render,redirect
 from .models import Information
 from django.contrib import messages
@@ -7,6 +8,8 @@ from django.db.models import Value as V
 from django.db.models.functions import Concat   
 from django.views.decorators.csrf import csrf_exempt
 from collections import defaultdict
+from rest_framework import status
+from django.core.exceptions import ObjectDoesNotExist
 # Create your views here.
 
 def pagination(page_no, contacts_list):
@@ -18,12 +21,13 @@ def pagination(page_no, contacts_list):
 			last = default_count * (page_no)
 	return contacts_list[default_count * (page_no - 1):last]
 
-
+@api_view(['GET', 'POST'])
 @csrf_exempt
 def Contacts(request):
 
 	contacts = Information.objects.all()
 
+	page_no = 1
 	if request.method =="POST":
 		info = Information()
 
@@ -32,86 +36,57 @@ def Contacts(request):
 		info.email = request.POST['email']
 		info.contact_number = request.POST['contact_number']
 		form = InfromationForm(request.POST,instance= info)
+
+		if "page" in request.POST:
+			page_no = int(request.POST['page'])
+
 		if form.is_valid():
 			info.save()
 		else:
-			messages.error(request, f'Invalid Field or Email already exists!')
-			return redirect('contacts_list')			
+			return JsonResponse({'message' : "Invalid Field or Email already exists!"})
+
 		contacts_list = Information.objects.all().values()
-		return render(request,'ContactBook/contacts.html',{'contacts':contacts_list, 'full_results' : contacts_list})
-		# return JsonResponse({'message' : "Added successfully."})
+
+		return JsonResponse({'message' : "Added successfully.", 'contacts' : pagination(page_no, list(Information.objects.filter(email=info.email).values()))})
 
 	elif request.method == "GET":
 		users = list(Information.objects.all().values())
-		# print(users)
-		page_no = 1
+
 		if "page" in request.GET:
 			page_no = int(request.GET['page'])
 
-		return render(request,'ContactBook/contacts.html', {'paginated_results' : pagination(page_no, users), 'contacts' : users})
-		# return JsonResponse({'results' : pagination(page_no, users) })
-	else:
-		return redirect('contacts_list')
-		# return JsonResponse({"message" : "Use only GET or POST methods"})
+		return JsonResponse({'contacts' : pagination(page_no, users) })
 
-	# return JsonResponse({'results' : list(users)[10 * (page_no - 1):last]})
 
+@api_view(['DELETE'])
 @csrf_exempt
 def delete_contact(request,contact_id):
 
-	if request.method == "GET":
-		messages.error(request, f'Invalid Request!')
-		return redirect('contacts_list')
-		# return JsonResponse({'message' : "USE METHOD : POST" })
-	elif request.method == "POST":
-		try:
-			Information.objects.get(id=contact_id).delete()
+	try:
+		Information.objects.get(id=contact_id).delete()
+		contacts_list = Information.objects.all().values()
+		return JsonResponse({'message' : "successfully deleted the contact"})
+	except ObjectDoesNotExist as e:
+		return JsonResponse({'error': str(e)}, safe=False, status=status.HTTP_404_NOT_FOUND)
+	except Exception:
+		return JsonResponse({'error': 'Something went wrong'}, safe=False, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-			contacts_list = Information.objects.all().values()
-			messages.success(request, f'The contact has been successfully deleted!')
-			return redirect('contacts_list')
-			# return JsonResponse({'message' : "successfully deleted the contact", 'contacts' : list(contacts_list)})
-		except:
-			messages.error(request, f'Contact doesn\'t exist')
-			return redirect('contacts_list')
-			# return JsonResponse({'message' : "Contact doesn't exist" })
-	else:
-		messages.error(request, 'Invalid Request Method!')
-		return HttpResponseRedirect("/")
-		# return JsonResponse({"message" : "Use only POST method for DELETE"}) 
 
-	# return HttpResponseRedirect("/")
-
-# @csrf_exempt
+@api_view(['PUT'])
+@csrf_exempt
 def edit_contact(request,contact_id):
-	if request.method == "GET":
-		Info_instance = Information.objects.get(id=contact_id)
-		form = InfromationForm(instance=Info_instance)
-		return render(request, "ContactBook/editcontact.html", {'form': form})
-	elif request.method == "POST":
-		if id == 0:
-			form = InfromationForm(request.POST)
-		else:
-			employee = Information.objects.get(id=contact_id)
-			form = InfromationForm(request.POST,instance= employee)
-		if form.is_valid():
-			form.save()
-			contacts_list = Information.objects.filter(id=contact_id).values()
-			messages.success(request, f'successfully Updated!')
-			return redirect('contacts_list')
-			# return JsonResponse({'message' : "successfully Updated", 'contacts' : list(contacts_list)})
 
-		else:
-			messages.error(request, 'Email already exists!')
-			return redirect('contacts_list')
-			# return JsonResponse({'message' : "Email already exists"})
-
+	if id == 0:
+		form = InfromationForm(request.POST)
 	else:
-		messages.success(request, 'Use only GET or POST methods!')
-		return redirect('contacts_list')
-		# return JsonResponse({"message" : "Use only GET or POST methods"}) 
+		employee = Information.objects.get(id=contact_id)
+		form = InfromationForm(request.POST,instance= employee)
+	if form.is_valid():
+		form.save()
+		return JsonResponse({'message' : "successfully Updated", 'contacts' : list(Information.objects.filter(id=contact_id).values())})
+	else:
+		return JsonResponse({'message' : "Email already exists"})
 
-	# return render(request, "ContactBook/editcontect.html")
 
 def Union(lst1, lst2):
 	final_list = lst1
@@ -124,26 +99,26 @@ def Union(lst1, lst2):
 
 	return final_list
 
-def  SearchContact(request):
+
+@api_view(['GET'])
+@csrf_exempt
+def SearchContact(request):
 
 	query = ""
 
-	if "search_query" in request.GET:
-		query = request.GET['search_query']
+	if "deep_search" in request.GET:
+		query = request.GET['deep_search']
 		users = list(Information.objects.filter(email__icontains=query).values())
 		users = Union(users, list(Information.objects.annotate(
 			full_name=Concat('first_name', V(' '), 'last_name')).filter(full_name__icontains=query).values()))
 
 	elif "query_email" in request.GET:
-
 		query = request.GET['query_email']
 		users = list(Information.objects.filter(email__icontains=query).values())
 
-	elif "query_user" in request.GET:
-
-		query = request.GET['query_user']
+	elif "query_name" in request.GET:
+		query = request.GET['query_name']
 		contact = Information.objects.all()
-
 		users = list(Information.objects.annotate(full_name=Concat('first_name', V(' '), 'last_name')).filter(full_name__icontains=query).values())
 
 	else:
@@ -152,15 +127,5 @@ def  SearchContact(request):
 	page_no = 1
 	if "page" in request.GET:
 		page_no = int(request.GET['page'])
-	
-	# page_contacts = pagination(page_no, users)
 
-	# print(len(page_contacts))
-
-	# if page_contacts == []:
-	# 	return render(request,'ContactBook/users_list.html', {'results' : users, 'messages' : ["Page Not Found"], 'full_results' : page_contacts})
-		# return JsonResponse({'message' : "Page Not Found"})
-
-
-	return render(request,'ContactBook/users_list.html', {'results' : users, 'messages' : ["Search Results for " + query]})
-	# return JsonResponse({'results' : page_contacts})
+	return JsonResponse({'results' : pagination(page_no, users)})
